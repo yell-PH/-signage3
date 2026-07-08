@@ -25,15 +25,16 @@
 <script>
   const v = document.getElementById('mv');
 
-  // Fire TV Silk は loop が2周目で止まることがあるため、手動ループ
+  // Fire TV Silk のループ停止対策（最重要）
   v.addEventListener('ended', () => {
+    v.load();            // ← Silk のキャッシュ切れを防ぐ
     v.currentTime = 0;
     v.play();
   });
 
   // Fire OS の省電力で動画が停止するのを防ぐ
   setInterval(() => {
-    if (v.paused) {
+    if (v.paused || v.readyState < 2) {
       v.play();
     }
   }, 4000);
@@ -43,6 +44,11 @@
     if (!document.hidden) {
       v.play();
     }
+  });
+
+  // 初回読み込みが遅れた場合の対策
+  window.addEventListener('load', () => {
+    v.play();
   });
 </script>
 
