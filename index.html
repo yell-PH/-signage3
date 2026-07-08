@@ -1,16 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>サイネージ動画ループ再生</title>
-  <style>
-    body { margin: 0; background: black; overflow: hidden; }
-    video { width: 100vw; height: 100vh; object-fit: cover; }
-  </style>
+<meta charset="UTF-8">
+<title>サイネージ動画ループ再生</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+  }
+  video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+  }
+</style>
 </head>
 <body>
-<video autoplay muted loop playsinline>
+
+<video id="mv" autoplay muted playsinline>
   <source src="https://sjemoqtzujrsezbkfwsm.supabase.co/storage/v1/object/public/signage-video/20260707(1).mp4" type="video/mp4">
 </video>
+
+<script>
+  const v = document.getElementById('mv');
+
+  // Fire TV Silk は loop が2周目で止まることがあるため、手動ループ
+  v.addEventListener('ended', () => {
+    v.currentTime = 0;
+    v.play();
+  });
+
+  // Fire OS の省電力で動画が停止するのを防ぐ
+  setInterval(() => {
+    if (v.paused) {
+      v.play();
+    }
+  }, 4000);
+
+  // 自動再生がブロックされた場合の対策
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      v.play();
+    }
+  });
+</script>
+
 </body>
 </html>
