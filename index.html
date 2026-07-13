@@ -56,11 +56,15 @@
     location.reload();
   }, 300000); // 300,000ms = 5分
 
-  // ★ 対策②：30秒ごとに偽のキー入力を発生させ、無操作判定を防ぐ（Vega OS対策）
-setInterval(function() {
-    const fakeEvent = new KeyboardEvent('keydown', { key: 'ArrowRight' });
-    document.dispatchEvent(fakeEvent);
+  // ★ Vega OS 最終対策：30秒ごとに偽のマウス移動イベントを送る
+  setInterval(function() {
+    const fakeMove = new MouseEvent('mousemove', {
+        clientX: 1,
+        clientY: 1
+    });
+    document.dispatchEvent(fakeMove);
   }, 30000); // 30秒
+
 
 </script>
 
