@@ -25,50 +25,36 @@
 <script>
   const v = document.getElementById('mv');
 
-  // ✨ 改良：重い v.load() を廃止し、秒数を戻して即座に再生する滑らかなループ処理
+  // 動画のループ処理（既存の滑らかな方法）
   v.addEventListener('ended', () => {
     v.currentTime = 0;
     v.play().catch(err => {
-      console.error("ループ再生に失敗しました。再読み込みします:", err);
+      console.error("ループ再生に失敗しました:", err);
       v.load();
       v.play();
     });
   });
 
-  // 万が一動画が途中で停止した場合の定期チェック（既存）
+  // 定期再生チェック（既存）
   setInterval(() => {
     if (v.paused || v.readyState < 2) {
       v.play();
     }
   }, 4000);
 
-  // タブの切り替えや画面が戻ってきたときの対策（既存）
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      v.play();
-    }
-  });
-
   // 初回読み込み時の対策（既存）
   window.addEventListener('load', () => {
     v.play();
   });
 
-  // Vega OS 最終対策：偽のマウス移動（既存）
-  setInterval(function() {
-    const fakeMove = new MouseEvent('mousemove', {
-        clientX: 1,
-        clientY: 1
-    });
-    document.dispatchEvent(fakeMove);
-  }, 30000);
 
-
-  // 🚨 10分スリープを絶対に阻止する「8分強制リロード」
-  // 動画が6分なので、1ループ目が終わり、2ループ目の途中（合計8分）でページがリフレッシュされます。
-  // これでOSのスリープタイマーを確実に壊します。
+  // 🚨 【今回の超最終対策】8分ごとにURLを完全に変えて「別のページ」へ遷移する
+  // location.reload() ではなく、URLの末尾に毎回違う数字（タイムスタンプ）を強制的に付与してジャンプします。
+  // これにより、OSに「ユーザーが新しい別のウェブサイトに移動した」と認識させ、10分タイマーを強制リセットします。
   setTimeout(function() {
-    location.reload();
+    const currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+    // 新しいURL（例: mysignage.html?t=17123456789）を作って完全に遷移
+    window.location.href = currentUrl + '?t=' + new Date().getTime();
   }, 480000); // 480,000ms = 8分
 
 </script>
