@@ -18,23 +18,33 @@
 </head>
 <body>
 
-<!-- 1. HTML側は muted をつけて自動再生ブロックを確実に回避します -->
+<!-- HTML側は完全に muted のまま固定し、自動再生を絶対に成功させます -->
 <video id="mv" autoplay muted playsinline>
-  <!-- ※ 新しく作った「無音トラック付き」の動画URLに差し替えてください -->
   <source src="https://sjemoqtzujrsezbkfwsm.supabase.co/storage/v1/object/public/signage-video/20260707(2).mp4" type="video/mp4">
 </video>
 
 <script>
   const v = document.getElementById('mv');
+  let wakeLock = null;
 
-  // 2. 【新規】動画が再生開始されたらミュートを解除し、音量を極小にします。
-  // 音声トラックが流れることで、Vega OSに「メディア再生中」と認識させ、スリープを防止します。
+  // 【新規】画面のスリープ（消灯・一時停止）を強制的に防止する関数
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock が有効になりました。スリープを防止します。');
+      }
+    } catch (err) {
+      console.error('Wake Lock の起動に失敗しました:', err);
+    }
+  }
+
+  // 動画の再生が始まったら、スリープ防止機能を起動する
   v.addEventListener('play', () => {
-    v.muted = false;
-    v.volume = 0.001; 
-  }, { once: true }); // 最初の再生時に1回だけ実行
+    requestWakeLock();
+  });
 
-  // Fire TV Silk のループ停止対策（既存の確実な方法を維持）
+  // Fire TV Silk のループ停止対策（既存）
   v.addEventListener('ended', () => {
     v.load();            
     v.currentTime = 0;
@@ -48,10 +58,11 @@
     }
   }, 4000);
 
-  // 画面のタブ切り替えや非表示から戻ったときの対策（既存）
-  document.addEventListener('visibilitychange', () => {
+  // タブの切り替えや画面が戻ってきたときの対策（既存）
+  document.addEventListener('visibilitychange', async () => {
     if (!document.hidden) {
       v.play();
+      await requestWakeLock(); // 画面が戻ったらスリープ防止を再要求
     }
   });
 
@@ -60,9 +71,7 @@
     v.play();
   });
 
-  // 3. 【削除】5分の強制リロード（location.reload）は、最初に戻る原因のため削除しました。
-
-  // 4. Vega OS 最終対策：偽のマウス移動（念のため維持）
+  // Vega OS 最終対策：偽のマウス移動（既存）
   setInterval(function() {
     const fakeMove = new MouseEvent('mousemove', {
         clientX: 1,
