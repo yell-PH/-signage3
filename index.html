@@ -25,37 +25,63 @@
 <script>
   const v = document.getElementById('mv');
 
-  // 動画のループ処理（既存の滑らかな方法）
+  // 動画のループ処理
   v.addEventListener('ended', () => {
     v.currentTime = 0;
     v.play().catch(err => {
-      console.error("ループ再生に失敗しました:", err);
+      console.error("再生失敗:", err);
       v.load();
       v.play();
     });
   });
 
-  // 定期再生チェック（既存）
+  // 定期再生チェック
   setInterval(() => {
     if (v.paused || v.readyState < 2) {
       v.play();
     }
   }, 4000);
 
-  // 初回読み込み時の対策（既存）
-  window.addEventListener('load', () => {
-    v.play();
-  });
+  window.addEventListener('load', () => { v.play(); });
 
+  // 🚨【大本命の対策】1分ごとに「画面をタッチした信号」を発生させる
+  setInterval(function() {
+    // 画面の中央（X: 100, Y: 100の位置）をタッチしたという本物のイベントを作成
+    const touch = new Touch({
+      identifier: Date.now(),
+      target: document.body,
+      clientX: 100,
+      clientY: 100,
+      screenX: 100,
+      screenY: 100,
+      pageX: 100,
+      pageY: 100
+    });
 
-  // 🚨 【今回の超最終対策】8分ごとにURLを完全に変えて「別のページ」へ遷移する
-  // location.reload() ではなく、URLの末尾に毎回違う数字（タイムスタンプ）を強制的に付与してジャンプします。
-  // これにより、OSに「ユーザーが新しい別のウェブサイトに移動した」と認識させ、10分タイマーを強制リセットします。
-  setTimeout(function() {
-    const currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
-    // 新しいURL（例: mysignage.html?t=17123456789）を作って完全に遷移
-    window.location.href = currentUrl + '?t=' + new Date().getTime();
-  }, 480000); // 480,000ms = 8分
+    const touchStartEvent = new TouchEvent('touchstart', {
+      touches: [touch],
+      targetTouches: [touch],
+      changedTouches: [touch],
+      bubbles: true,
+      cancelable: true
+    });
+
+    const touchEndEvent = new TouchEvent('touchend', {
+      touches: [],
+      targetTouches: [],
+      changedTouches: [touch],
+      bubbles: true,
+      cancelable: true
+    });
+
+    // 画面にタッチ信号を送り込む
+    document.body.dispatchEvent(touchStartEvent);
+    setTimeout(() => {
+      document.body.dispatchEvent(touchEndEvent);
+    }, 100);
+
+    console.log("OSの目を盗んで画面をタッチしました");
+  }, 60000); // 1分（60,000ms）ごとに実行
 
 </script>
 
