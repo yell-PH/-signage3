@@ -57,10 +57,11 @@
   }, 300000); // 300,000ms = 5分
 
   // ★ 対策②：30秒ごとに偽のキー入力を発生させ、無操作判定を防ぐ（Vega OS対策）
-  setInterval(function() {
-    const fakeEvent = new KeyboardEvent('keydown', { key: 'Shift' });
+setInterval(function() {
+    const fakeEvent = new KeyboardEvent('keydown', { key: 'ArrowRight' });
     document.dispatchEvent(fakeEvent);
-  }, 30000); // 30,000ms = 30秒
+  }, 30000); // 30秒
+
 </script>
 
 </body>
