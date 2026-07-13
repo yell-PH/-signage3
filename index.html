@@ -18,53 +18,58 @@
 </head>
 <body>
 
+<!-- 1. HTML側は muted をつけて自動再生ブロックを確実に回避します -->
 <video id="mv" autoplay muted playsinline>
+  <!-- ※ 新しく作った「無音トラック付き」の動画URLに差し替えてください -->
   <source src="https://sjemoqtzujrsezbkfwsm.supabase.co/storage/v1/object/public/signage-video/20260707(2).mp4" type="video/mp4">
 </video>
 
 <script>
   const v = document.getElementById('mv');
 
-  // Fire TV Silk のループ停止対策（最重要）
+  // 2. 【新規】動画が再生開始されたらミュートを解除し、音量を極小にします。
+  // 音声トラックが流れることで、Vega OSに「メディア再生中」と認識させ、スリープを防止します。
+  v.addEventListener('play', () => {
+    v.muted = false;
+    v.volume = 0.001; 
+  }, { once: true }); // 最初の再生時に1回だけ実行
+
+  // Fire TV Silk のループ停止対策（既存の確実な方法を維持）
   v.addEventListener('ended', () => {
-    v.load();            // Silk のキャッシュ切れを防ぐ
+    v.load();            
     v.currentTime = 0;
     v.play();
   });
 
-  // Fire OS / Vega OS の省電力で動画が停止するのを防ぐ
+  // 万が一動画が停止した場合の定期チェック（既存）
   setInterval(() => {
     if (v.paused || v.readyState < 2) {
       v.play();
     }
   }, 4000);
 
-  // 自動再生がブロックされた場合の対策
+  // 画面のタブ切り替えや非表示から戻ったときの対策（既存）
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       v.play();
     }
   });
 
-  // 初回読み込みが遅れた場合の対策
+  // 初回読み込み時の対策（既存）
   window.addEventListener('load', () => {
     v.play();
   });
 
-  // ★ 対策①：5分ごとにページをリロードしてメモリをクリア（Vega OS対策）
-  setTimeout(function() {
-    location.reload();
-  }, 300000); // 300,000ms = 5分
+  // 3. 【削除】5分の強制リロード（location.reload）は、最初に戻る原因のため削除しました。
 
-  // ★ Vega OS 最終対策：30秒ごとに偽のマウス移動イベントを送る
+  // 4. Vega OS 最終対策：偽のマウス移動（念のため維持）
   setInterval(function() {
     const fakeMove = new MouseEvent('mousemove', {
         clientX: 1,
         clientY: 1
     });
     document.dispatchEvent(fakeMove);
-  }, 30000); // 30秒
-
+  }, 30000);
 
 </script>
 
